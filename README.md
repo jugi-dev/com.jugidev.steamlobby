@@ -1,9 +1,7 @@
 ## Steam Lobby Manager
 
 A simple lobby manager for Unity. Three files + one dependency are all that you need.
-## Installation
-**Facepunch Transport (Dependency)**
-
+## Dependency installation (required)
 
 Package Manager -> Install package from git URL
 
@@ -15,7 +13,8 @@ Credits:
 
 Nico Thomas (Facepunch Transport), Floris van Onna (Facepunch Transport), Garry Newman (Author of Facepunch.Steamworks, used in Facepunch Transport)
 
-**Steam Lobby**
+## Install this package
+
 Package Manager -> Install package from git URL
 
 ```bash
