@@ -5,8 +5,7 @@
   "description": "Implementation of Lobby system using Facepunch Transport and SteamWorks.NET",
   "unity": "6000.0",
   "dependencies": {
-    "com.unity.netcode.gameobjects": "1.0.0-pre.4",
-    "com.community.netcode.transport.facepunch": "https://github.com/jugi-dev/multiplayer-community-contributions.git"
+    "com.unity.netcode.gameobjects": "2.7.0",
   },
   "author": {
     "name": "jugidev",
