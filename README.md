@@ -1,3 +1,3 @@
 ## Steam Lobby Manager
 
-** How To Use **
+**How To Use**
