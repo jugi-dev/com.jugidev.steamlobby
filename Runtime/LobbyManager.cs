@@ -10,11 +10,19 @@ namespace SteamLobby
     public class LobbyManager : MonoBehaviour
     {
         public static LobbyManager Instance { get; private set; }
+        private LobbyConfiguration lobbyConfiguration;
+
+        public LobbyConfiguration Configuration => lobbyConfiguration;
 
         private Lobby currentLobby;
         public Lobby CurrentLobby => currentLobby;
 
-        public const string HostID = "HostID";
+        private LobbyEvent lobbyEvent;
+        public Action<Lobby, LobbyEvent> OnLobbyEvent;
+
+        public ulong LocalId => SteamClient.SteamId;
+
+        private const string HostID = "HostID";
 
         public enum LobbyEvent
         {
@@ -27,11 +35,14 @@ namespace SteamLobby
             HOST_MEMBER_LEAVE,
         }
 
-        private LobbyEvent lobbyEvent;
+        private enum LogType
+        {
+            INFO,
+            WARNING,
+            ERROR,
+        }
 
-        public Action<Lobby, LobbyEvent> OnLobbyEvent;
-
-        void Awake()
+        private void Awake()
         {
             if (Instance == null)
             {
@@ -39,13 +50,19 @@ namespace SteamLobby
             }
         }
 
-        void Start() => SubscribeToCallbacks();
+        private void Start() => SubscribeToCallbacks();
 
-        void OnDestroy() => UnsubscribeToCallbacks();
+        private void OnDestroy() => UnsubscribeToCallbacks();
 
         #region Lobby callbacks
-        void SubscribeToCallbacks()
+        private void SubscribeToCallbacks()
         {
+            if (!SteamClient.IsLoggedOn || !SteamClient.IsValid || !SteamClient.SteamId.IsValid)
+            {
+                SteamLobbyLog(LogType.ERROR, "Could not communicate with steam. Is it down?");
+                return;
+            }
+
             SteamMatchmaking.OnLobbyCreated += OnLobbyCreated;
             SteamMatchmaking.OnLobbyEntered += OnLobbyEntered;
             SteamMatchmaking.OnLobbyMemberJoined += OnLobbyMemberJoined;
@@ -57,7 +74,7 @@ namespace SteamLobby
             lobbyEvent = LobbyEvent.NONE;
         }
 
-        void UnsubscribeToCallbacks()
+        private void UnsubscribeToCallbacks()
         {
             SteamMatchmaking.OnLobbyCreated -= OnLobbyCreated;
             SteamMatchmaking.OnLobbyEntered -= OnLobbyEntered;
@@ -73,18 +90,19 @@ namespace SteamLobby
             switch (result)
             {
                 case Result.OK:
-                    Debug.Log("Lobby created successfully");
+                    SteamLobbyLog(LogType.INFO, "Lobby created successfully");
                     break;
                 default:
-                    Debug.LogError($"Error creating lobby: {Enum.GetName(typeof(Result), result)}");
+                    SteamLobbyLog(
+                        LogType.ERROR,
+                        $"Error creating lobby: {Enum.GetName(typeof(Result), result)}"
+                    );
                     break;
             }
         }
 
         private void OnLobbyEntered(Lobby lobby)
         {
-            Debug.Log($"Entered lobby as: {SteamClient.Name} ({SteamClient.SteamId})");
-
             if (!currentLobby.IsOwnedBy(SteamClient.SteamId))
             {
                 var transport = NetworkManager.Singleton.GetComponent<FacepunchTransport>();
@@ -95,6 +113,11 @@ namespace SteamLobby
 
             lobbyEvent = LobbyEvent.LOBBY_ENTERED;
             OnLobbyEvent?.Invoke(lobby, lobbyEvent);
+
+            SteamLobbyLog(
+                LogType.INFO,
+                $"Entered lobby as: {SteamClient.Name} ({SteamClient.SteamId})"
+            );
         }
 
         private void OnLobbyMemberLeave(Lobby lobby, Friend friend)
@@ -107,8 +130,7 @@ namespace SteamLobby
             }
             lobbyEvent = LobbyEvent.HOST_MEMBER_LEAVE;
             OnLobbyEvent?.Invoke(lobby, lobbyEvent);
-
-            Debug.Log($"{friend.Name} ({friend.Id}) left from the lobby.");
+            SteamLobbyLog(LogType.INFO, $"{friend.Name} ({friend.Id}) left from the lobby.");
         }
 
         private void OnLobbyMemberJoined(Lobby lobby, Friend friend)
@@ -116,7 +138,7 @@ namespace SteamLobby
             lobbyEvent = LobbyEvent.MEMBER_JOINED;
             OnLobbyEvent?.Invoke(lobby, lobbyEvent);
 
-            Debug.Log($"{friend.Name} ({friend.Id}) entered the lobby");
+            SteamLobbyLog(LogType.INFO, $"{friend.Name} ({friend.Id}) entered to the lobby.");
         }
 
         private void OnLobbyMemberDisconnected(Lobby lobby, Friend friend)
@@ -124,7 +146,10 @@ namespace SteamLobby
             lobbyEvent = LobbyEvent.MEMBER_DISCONNECTED;
             OnLobbyEvent?.Invoke(lobby, lobbyEvent);
 
-            Debug.Log($"{friend.Name} ({friend.Id}) disconnected from the lobby.");
+            SteamLobbyLog(
+                LogType.INFO,
+                $"{friend.Name} ({friend.Id}) disconnected from the lobby."
+            );
         }
 
         private async void OnLobbyJoinRequested(Lobby lobby, SteamId id)
@@ -142,28 +167,33 @@ namespace SteamLobby
                     currentLobby = lobby;
                     break;
                 default:
-                    Debug.LogError(
-                        $"Error joining lobby: {Enum.GetName(typeof(RoomEnter), joinResult)}"
-                    );
+                    SteamLobbyLog(LogType.ERROR, "Error joining lobby");
                     break;
             }
         }
         #endregion
 
         #region Button events
-        public async void StartLobby()
+        /// <summary>
+        /// Starts the lobby with the given configuration.
+        /// </summary>
+        /// <param name="lobbyConfiguration"></param>
+        /// <returns></returns>
+        public async void StartLobby(LobbyConfiguration lobbyConfiguration)
         {
             if (!SteamClient.IsLoggedOn || !SteamClient.IsValid)
             {
-                Debug.Log("Could not communicate with Steam. Is it down?");
+                SteamLobbyLog(LogType.ERROR, "Could not communicate with steam. Is it down?");
                 return;
             }
+
+            this.lobbyConfiguration = lobbyConfiguration;
 
             var transport = NetworkManager.Singleton.GetComponent<FacepunchTransport>();
             transport.targetSteamId = SteamClient.SteamId;
             NetworkManager.Singleton.StartHost();
 
-            var result = await SteamMatchmaking.CreateLobbyAsync(2);
+            var result = await SteamMatchmaking.CreateLobbyAsync(lobbyConfiguration.MaxMembers);
 
             currentLobby = result.Value;
             currentLobby.SetFriendsOnly();
@@ -171,6 +201,11 @@ namespace SteamLobby
             currentLobby.SetData(HostID, SteamClient.SteamId.Value.ToString());
         }
 
+        /// <summary>
+        /// Shuts down connection and leaves the lobby.
+        /// </summary>
+        /// <param name="lobbyConfiguration"></param>
+        /// <returns></returns>
         public void LeaveLobby()
         {
             if (!SteamClient.IsLoggedOn)
@@ -181,6 +216,63 @@ namespace SteamLobby
 
             lobbyEvent = LobbyEvent.HOST_LEAVE;
             OnLobbyEvent?.Invoke(currentLobby, lobbyEvent);
+        }
+        #endregion
+
+        #region Utils
+
+        /// <summary>
+        /// Changes the lobby type of the specified lobby.
+        /// </summary>
+        /// <param name="lobby"></param>
+        public void ChangeLobbyType(Lobby lobby)
+        {
+            if (!lobby.Id.IsValid)
+            {
+                SteamLobbyLog(
+                    LogType.ERROR,
+                    "Can not change lobby type because lobby does not exist!"
+                );
+
+                return;
+            }
+
+            lobbyConfiguration.ChangeLobbyType(lobby);
+        }
+
+        /// <summary>
+        /// Gets the member count of the specified lobby.
+        /// </summary>
+        /// <param name="lobby"></param>
+        public int GetMemberCount(Lobby lobby)
+        {
+            if (!lobby.Id.IsValid)
+            {
+                SteamLobbyLog(
+                    LogType.ERROR,
+                    "Can not get member count because lobby does not exist!"
+                );
+
+                return -1;
+            }
+            return lobby.MemberCount;
+        }
+
+        private void SteamLobbyLog(LogType logType, string logMessage)
+        {
+            string printMessage = $"[{nameof(LobbyManager)}] {logMessage}";
+            switch (logType)
+            {
+                case LogType.INFO:
+                    Debug.Log(printMessage);
+                    break;
+                case LogType.WARNING:
+                    Debug.LogWarning(printMessage);
+                    break;
+                case LogType.ERROR:
+                    Debug.LogError(printMessage);
+                    break;
+            }
         }
         #endregion
     }
