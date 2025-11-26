@@ -47,6 +47,7 @@ namespace SteamLobby
         {
             createLobbyButton.onClick.RemoveListener(OnCreateLobby);
             leaveButton.onClick.RemoveListener(OnLeaveLobby);
+            LobbyManager.Instance.OnLobbyEvent -= OnLobbyEvent;
         }
 
         private void OnLobbyEvent(Lobby lobby, LobbyEvent @event)
