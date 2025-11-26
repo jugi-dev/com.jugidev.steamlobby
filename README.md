@@ -21,7 +21,7 @@ Package Manager -> Install package from git URL
 https://github.com/jugi-dev/com.jugidev.steamlobby.git
 ```
 ## Usage/Examples
-
+A script for a simple UI
 ```csharp
 using Steamworks;
 using Steamworks.Data;
