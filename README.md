@@ -15,7 +15,7 @@ Nico Thomas (Facepunch Transport), Floris van Onna (Facepunch Transport), Garry 
 
 ## Install this package
 
-Package Manager -> Install package from git URL
+Get the source from Releases or Package Manager -> Install package from git URL
 
 ```bash
 https://github.com/jugi-dev/com.jugidev.steamlobby.git
