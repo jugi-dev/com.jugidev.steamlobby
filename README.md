@@ -16,6 +16,6 @@ Package Manager -> Install package from git URL
 ```
 ## Usage/Examples
 
-Add a NetworkManager to your scene. On the NetworkManager you can add both LobbyManager and LobbyUI to the same object.
+Add a NetworkManager to your scene. On the NetworkManager you can add both LobbyManager and LobbyUI.
 
 Create a simple UI according to the fields in LobbyUI. 2 buttons, a panel with vertical layout group and create a prefab for your players' info to display on the playerlist.
