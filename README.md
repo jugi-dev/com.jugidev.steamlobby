@@ -22,6 +22,172 @@ https://github.com/jugi-dev/com.jugidev.steamlobby.git
 ```
 ## Usage/Examples
 
-Add a NetworkManager to your scene. On the NetworkManager you can add both LobbyManager and LobbyUI.
+```bash
+using Steamworks;
+using Steamworks.Data;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
-Create a simple UI according to the fields in LobbyUI. 2 buttons, a panel with vertical layout group and create a prefab for your players' info to display on the playerlist.
+namespace SteamLobby
+{
+    using LobbyEvent = LobbyManager.LobbyEvent;
+
+    public class LobbyUI : MonoBehaviour
+    {
+        public static LobbyUI Instance { get; private set; }
+
+        [SerializeField]
+        private Button createLobbyButton;
+
+        [SerializeField]
+        private Button leaveButton;
+
+        [SerializeField]
+        private Transform playerList;
+
+        [SerializeField]
+        private GameObject playerLobbyObjectPrefab;
+
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+        }
+
+        private void Start()
+        {
+            createLobbyButton.onClick.AddListener(OnCreateLobby);
+            leaveButton.onClick.AddListener(OnLeaveLobby);
+
+            ToggleCreateLobbyButton(true);
+            ToggleLeaveLobbyButton(false);
+
+            LobbyManager.Instance.OnLobbyEvent += OnLobbyEvent;
+        }
+
+        private void OnDestroy()
+        {
+            createLobbyButton.onClick.RemoveListener(OnCreateLobby);
+            leaveButton.onClick.RemoveListener(OnLeaveLobby);
+            LobbyManager.Instance.OnLobbyEvent -= OnLobbyEvent;
+        }
+
+        private void OnLobbyEvent(Lobby lobby, LobbyEvent @event)
+        {
+            switch (@event)
+            {
+                case LobbyEvent.NONE:
+                    ToggleCreateLobbyButton(true);
+                    ToggleLeaveLobbyButton(false);
+                    break;
+                case LobbyEvent.LOBBY_ENTERED:
+                    UpdateLobbyMembersUI(lobby);
+                    ToggleCreateLobbyButton(false);
+                    ToggleLeaveLobbyButton(true);
+                    break;
+                case LobbyEvent.HOST_MEMBER_LEAVE:
+                case LobbyEvent.HOST_LEAVE:
+                    UpdateLobbyMembersUI(lobby);
+                    ToggleCreateLobbyButton(true);
+                    ToggleLeaveLobbyButton(false);
+                    break;
+                case LobbyEvent.MEMBER_JOINED:
+                case LobbyEvent.MEMBER_LEFT:
+                case LobbyEvent.MEMBER_DISCONNECTED:
+                    UpdateLobbyMembersUI(lobby);
+                    break;
+            }
+        }
+
+        public void OnCreateLobby()
+        {
+            LobbyManager.Instance.StartLobby(
+                new LobbyConfiguration(2, LobbyConfiguration.LobbyType.FriendsOnly)
+            );
+        }
+
+        public void OnLeaveLobby()
+        {
+            LobbyManager.Instance.LeaveLobby();
+        }
+
+        private void UpdateLobbyMembersUI(Lobby lobby)
+        {
+            ClearPlayerList();
+
+            if (!SteamClient.IsLoggedOn || !lobby.Id.IsValid)
+                return;
+
+            foreach (var member in lobby.Members)
+            {
+                if (!member.Id.IsValid)
+                    continue;
+                CreateLobbyEntryUI(member, lobby, playerLobbyObjectPrefab, playerList);
+            }
+        }
+
+        private void ToggleCreateLobbyButton(bool isEnabled)
+        {
+            createLobbyButton.gameObject.SetActive(isEnabled);
+        }
+
+        private void ToggleLeaveLobbyButton(bool isEnabled)
+        {
+            leaveButton.gameObject.SetActive(isEnabled);
+        }
+
+        private void ClearPlayerList()
+        {
+            if (playerList.childCount > 0)
+            {
+                foreach (Transform t in playerList)
+                {
+                    Destroy(t.gameObject);
+                }
+            }
+        }
+
+        private async void CreateLobbyEntryUI(
+            Friend member,
+            Lobby lobby,
+            GameObject playerLobbyObjectPrefab,
+            Transform playerList
+        )
+        {
+            PlayerInfo info = new PlayerInfo
+            {
+                Friend = member,
+                IsLobbyOwner = lobby.IsOwnedBy(member.Id),
+            };
+
+            GameObject playerLobbyObjectInstance = Instantiate(playerLobbyObjectPrefab, playerList);
+            playerLobbyObjectInstance
+                .GetComponentInChildren<TMP_Text>()
+                .SetText(info.ConstructLobbyEntry());
+
+            Texture2D texture2D = await info.GetAvatar();
+
+            if (texture2D == null)
+            {
+                return;
+            }
+            var sprite = Sprite.Create(
+                texture2D,
+                new Rect(0, 0, texture2D.width, texture2D.height),
+                default
+            );
+
+            UnityEngine.UI.Image avatarObject = playerLobbyObjectInstance
+                .transform.GetChild(0)
+                .transform.GetChild(0)
+                .GetComponent<UnityEngine.UI.Image>();
+
+            avatarObject.sprite = sprite;
+        }
+    }
+}
+
+```
