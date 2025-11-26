@@ -22,7 +22,7 @@ https://github.com/jugi-dev/com.jugidev.steamlobby.git
 ```
 ## Usage/Examples
 
-```bash
+```csharp
 using Steamworks;
 using Steamworks.Data;
 using TMPro;
