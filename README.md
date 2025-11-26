@@ -4,15 +4,17 @@ A simple lobby manager for Unity. Three files + one dependency are all that you 
 ## Installation
 **Facepunch Transport (Dependency)**
 
-Credits:
-
-Nico Thomas (Facepunch Transport), Floris van Onna (Facepunch Transport), Garry Newman (Author of Facepunch.Steamworks, used in Facepunch Transport)
 
 Package Manager -> Install package from git URL
 
 ```bash
   https://github.com/Unity-Technologies/multiplayer-community-contributions.git?path=/Transports/com.community.netcode.transport.facepunch
 ```
+
+Credits:
+
+Nico Thomas (Facepunch Transport), Floris van Onna (Facepunch Transport), Garry Newman (Author of Facepunch.Steamworks, used in Facepunch Transport)
+
 **Steam Lobby**
 Package Manager -> Install package from git URL
 
