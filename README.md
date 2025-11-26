@@ -2,13 +2,13 @@
 
 A simple lobby manager for Unity. Three files + one dependency are all that you need.
 ## Installation
-
+**Facepunch Transport (Dependency)**
 Package Manager -> Install package from git URL
 
 ```bash
   https://github.com/Unity-Technologies/multiplayer-community-contributions.git?path=/Transports/com.community.netcode.transport.facepunch
 ```
-
+**Steam Lobby**
 Package Manager -> Install package from git URL
 
 ```bash
