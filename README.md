@@ -6,7 +6,7 @@ A simple lobby manager for Unity. Three files + one dependency are all that you 
 Package Manager -> Install package from git URL
 
 ```bash
-  https://github.com/Unity-Technologies/multiplayer-community-contributions.git?path=/Transports/com.community.netcode.transport.facepunch
+https://github.com/Unity-Technologies/multiplayer-community-contributions.git?path=/Transports/com.community.netcode.transport.facepunch
 ```
 
 Credits:
@@ -18,7 +18,7 @@ Nico Thomas (Facepunch Transport), Floris van Onna (Facepunch Transport), Garry 
 Package Manager -> Install package from git URL
 
 ```bash
-  https://github.com/jugi-dev/com.jugidev.steamlobby.git
+https://github.com/jugi-dev/com.jugidev.steamlobby.git
 ```
 ## Usage/Examples
 
