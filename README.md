@@ -3,7 +3,7 @@
 A simple Steam lobby manager for Unity. Uses Netcode for GameObjects.
 ## Dependency installation (required)
 
-Package Manager -> Install package from git URL
+Package Manager -> Install package from git URL -> paste the link below
 
 ```bash
 https://github.com/Unity-Technologies/multiplayer-community-contributions.git?path=/Transports/com.community.netcode.transport.facepunch
@@ -15,7 +15,7 @@ Nico Thomas (Facepunch Transport), Floris van Onna (Facepunch Transport), Garry 
 
 ## Install this package
 
-Get the source from Releases, clone this repo or in Unity Package Manager -> Install package from git URL
+Get the source from Releases, clone this repo or in Unity Package Manager -> Install package from git URL -> paste the link below
 
 ```bash
 https://github.com/jugi-dev/com.jugidev.steamlobby.git
