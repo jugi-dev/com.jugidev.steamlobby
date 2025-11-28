@@ -181,7 +181,7 @@ namespace SteamLobby
             );
             
             
-            // change the logic here if you dont have things like border
+            // change the logic here if you dont have things like border or a mask object
             UnityEngine.UI.Image avatarObject = playerLobbyObjectInstance
                 .transform.GetChild(0)
                 .transform.GetChild(0)
