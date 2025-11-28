@@ -1,6 +1,6 @@
-## Steam Lobby Manager
+## Steam Lobby template
 
-A simple Steam lobby manager for Unity. Uses Netcode for GameObjects.
+A simple Steam lobby template for Unity. Uses Netcode for GameObjects.
 ## Dependency installation (required)
 
 Package Manager -> Install package from git URL -> paste the link below
