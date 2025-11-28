@@ -31,9 +31,7 @@ using UnityEngine.UI;
 
 namespace SteamLobby
 {
-    using LobbyEvent = LobbyManager.LobbyEvent;
-
-    public class LobbyUI : MonoBehaviour
+    public class LobbyUI : LobbyUIBase
     {
         public static LobbyUI Instance { get; private set; }
 
@@ -57,49 +55,51 @@ namespace SteamLobby
             }
         }
 
-        private void Start()
+        public override void Start()
         {
+            base.Start();
             createLobbyButton.onClick.AddListener(OnCreateLobby);
             leaveButton.onClick.AddListener(OnLeaveLobby);
-
-            ToggleCreateLobbyButton(true);
-            ToggleLeaveLobbyButton(false);
-
-            LobbyManager.Instance.OnLobbyEvent += OnLobbyEvent;
         }
 
-        private void OnDestroy()
+        public override void OnDestroy()
         {
+            base.OnDestroy();
             createLobbyButton.onClick.RemoveListener(OnCreateLobby);
             leaveButton.onClick.RemoveListener(OnLeaveLobby);
-            LobbyManager.Instance.OnLobbyEvent -= OnLobbyEvent;
         }
 
-        private void OnLobbyEvent(Lobby lobby, LobbyEvent @event)
+        public override void UI_OnCloseConnection(Lobby lobby)
         {
-            switch (@event)
-            {
-                case LobbyEvent.NONE:
-                    ToggleCreateLobbyButton(true);
-                    ToggleLeaveLobbyButton(false);
-                    break;
-                case LobbyEvent.LOBBY_ENTERED:
-                    UpdateLobbyMembersUI(lobby);
-                    ToggleCreateLobbyButton(false);
-                    ToggleLeaveLobbyButton(true);
-                    break;
-                case LobbyEvent.HOST_MEMBER_LEAVE:
-                case LobbyEvent.HOST_LEAVE:
-                    UpdateLobbyMembersUI(lobby);
-                    ToggleCreateLobbyButton(true);
-                    ToggleLeaveLobbyButton(false);
-                    break;
-                case LobbyEvent.MEMBER_JOINED:
-                case LobbyEvent.MEMBER_LEFT:
-                case LobbyEvent.MEMBER_DISCONNECTED:
-                    UpdateLobbyMembersUI(lobby);
-                    break;
-            }
+            UpdateLobbyMembersUI(lobby);
+            ToggleCreateLeaveButtons(true, false);
+        }
+
+        public override void UI_OnMemberLeft(Lobby lobby)
+        {
+            UpdateLobbyMembersUI(lobby);
+        }
+
+        public override void UI_OnMemberJoined(Lobby lobby)
+        {
+            UpdateLobbyMembersUI(lobby);
+        }
+
+        public override void UI_OnMemberDisconnected(Lobby lobby)
+        {
+            UpdateLobbyMembersUI(lobby);
+        }
+
+        public override void UI_OnLobbyEntered(Lobby lobby)
+        {
+            UpdateLobbyMembersUI(lobby);
+            ToggleCreateLeaveButtons(false, true);
+        }
+
+        public override void UI_OnHostMemberLeave(Lobby lobby)
+        {
+            UpdateLobbyMembersUI(lobby);
+            ToggleCreateLeaveButtons(true, false);
         }
 
         public void OnCreateLobby()
@@ -129,14 +129,10 @@ namespace SteamLobby
             }
         }
 
-        private void ToggleCreateLobbyButton(bool isEnabled)
+        private void ToggleCreateLeaveButtons(bool isCreateEnabled, bool isLeaveEnabled)
         {
-            createLobbyButton.gameObject.SetActive(isEnabled);
-        }
-
-        private void ToggleLeaveLobbyButton(bool isEnabled)
-        {
-            leaveButton.gameObject.SetActive(isEnabled);
+            createLobbyButton.gameObject.SetActive(isCreateEnabled);
+            leaveButton.gameObject.SetActive(isLeaveEnabled);
         }
 
         private void ClearPlayerList()
@@ -157,11 +153,7 @@ namespace SteamLobby
             Transform playerList
         )
         {
-            PlayerInfo info = new PlayerInfo
-            {
-                Friend = member,
-                IsLobbyOwner = lobby.IsOwnedBy(member.Id),
-            };
+            PlayerInfo info = new PlayerInfo(member, lobby.IsOwnedBy(member.Id));
 
             GameObject playerLobbyObjectInstance = Instantiate(playerLobbyObjectPrefab, playerList);
             playerLobbyObjectInstance
@@ -179,9 +171,7 @@ namespace SteamLobby
                 new Rect(0, 0, texture2D.width, texture2D.height),
                 default
             );
-            
-            
-            // change the logic here if you dont have things like border or a mask object
+
             UnityEngine.UI.Image avatarObject = playerLobbyObjectInstance
                 .transform.GetChild(0)
                 .transform.GetChild(0)
