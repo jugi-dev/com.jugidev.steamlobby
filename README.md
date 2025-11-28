@@ -57,14 +57,14 @@ namespace SteamLobby
 
         public override void Start()
         {
-            base.Start(); // base.Start should always be called!
+            base.Start(); // base.Start() should always be called!
             createLobbyButton.onClick.AddListener(OnCreateLobby);
             leaveButton.onClick.AddListener(OnLeaveLobby);
         }
 
         public override void OnDestroy()
         {
-            base.OnDestroy(); // base.OnDestroy should always be called!
+            base.OnDestroy(); // base.OnDestroy() should always be called!
             createLobbyButton.onClick.RemoveListener(OnCreateLobby);
             leaveButton.onClick.RemoveListener(OnLeaveLobby);
         }
