@@ -179,7 +179,9 @@ namespace SteamLobby
                 new Rect(0, 0, texture2D.width, texture2D.height),
                 default
             );
-
+            
+            
+            // change the logic here if you dont have things like border
             UnityEngine.UI.Image avatarObject = playerLobbyObjectInstance
                 .transform.GetChild(0)
                 .transform.GetChild(0)
