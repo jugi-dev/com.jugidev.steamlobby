@@ -17,23 +17,16 @@ namespace SteamLobby
         private Lobby currentLobby;
         public Lobby CurrentLobby => currentLobby;
 
-        private LobbyEvent lobbyEvent;
-        public Action<Lobby, LobbyEvent> OnLobbyEvent;
+        public Action<Lobby> UIUpdate_OnLobbyEntered;
+        public Action<Lobby> UIUpdate_OnMemberJoined;
+        public Action<Lobby> UIUpdate_OnMemberLeft;
+        public Action<Lobby> UIUpdate_OnMemberDisconnected;
+        public Action<Lobby> UIUpdate_OnCloseConnection;
+        public Action<Lobby> UIUpdate_OnHostMemberLeave;
 
         public ulong LocalId => SteamClient.SteamId;
 
         private const string HostID = "HostID";
-
-        public enum LobbyEvent
-        {
-            NONE,
-            LOBBY_ENTERED,
-            MEMBER_JOINED,
-            MEMBER_LEFT,
-            MEMBER_DISCONNECTED,
-            HOST_LEAVE,
-            HOST_MEMBER_LEAVE,
-        }
 
         private enum LogType
         {
@@ -70,8 +63,6 @@ namespace SteamLobby
             SteamMatchmaking.OnLobbyMemberDisconnected += OnLobbyMemberDisconnected;
 
             SteamFriends.OnGameLobbyJoinRequested += OnLobbyJoinRequested;
-
-            lobbyEvent = LobbyEvent.NONE;
         }
 
         private void UnsubscribeToCallbacks()
@@ -103,7 +94,7 @@ namespace SteamLobby
 
         private void OnLobbyEntered(Lobby lobby)
         {
-            if (!currentLobby.IsOwnedBy(SteamClient.SteamId))
+            if (!lobby.IsOwnedBy(SteamClient.SteamId))
             {
                 var transport = NetworkManager.Singleton.GetComponent<FacepunchTransport>();
                 ulong target = ulong.Parse(lobby.GetData(HostID));
@@ -111,8 +102,7 @@ namespace SteamLobby
                 NetworkManager.Singleton.StartClient();
             }
 
-            lobbyEvent = LobbyEvent.LOBBY_ENTERED;
-            OnLobbyEvent?.Invoke(lobby, lobbyEvent);
+            UIUpdate_OnLobbyEntered?.Invoke(lobby);
 
             SteamLobbyLog(
                 LogType.INFO,
@@ -122,29 +112,27 @@ namespace SteamLobby
 
         private void OnLobbyMemberLeave(Lobby lobby, Friend friend)
         {
-            if (!NetworkManager.Singleton.IsConnectedClient)
+            if (!NetworkManager.Singleton.IsConnectedClient) // The host was the one leaving so we are now disconnected and should also leave the lobby.
             {
                 lobby.Leave();
-                lobbyEvent = LobbyEvent.MEMBER_LEFT;
-                OnLobbyEvent?.Invoke(lobby, lobbyEvent);
+                UIUpdate_OnHostMemberLeave?.Invoke(lobby);
+                SteamLobbyLog(LogType.INFO, $"The host [{friend.Name} ({friend.Id})] left from the lobby.");
+                return;
             }
-            lobbyEvent = LobbyEvent.HOST_MEMBER_LEAVE;
-            OnLobbyEvent?.Invoke(lobby, lobbyEvent);
+            UIUpdate_OnMemberLeft?.Invoke(lobby);
             SteamLobbyLog(LogType.INFO, $"{friend.Name} ({friend.Id}) left from the lobby.");
         }
 
         private void OnLobbyMemberJoined(Lobby lobby, Friend friend)
         {
-            lobbyEvent = LobbyEvent.MEMBER_JOINED;
-            OnLobbyEvent?.Invoke(lobby, lobbyEvent);
+            UIUpdate_OnMemberJoined?.Invoke(lobby);
 
             SteamLobbyLog(LogType.INFO, $"{friend.Name} ({friend.Id}) entered to the lobby.");
         }
 
         private void OnLobbyMemberDisconnected(Lobby lobby, Friend friend)
         {
-            lobbyEvent = LobbyEvent.MEMBER_DISCONNECTED;
-            OnLobbyEvent?.Invoke(lobby, lobbyEvent);
+            UIUpdate_OnMemberDisconnected?.Invoke(lobby);
 
             SteamLobbyLog(
                 LogType.INFO,
@@ -213,9 +201,7 @@ namespace SteamLobby
 
             NetworkManager.Singleton.Shutdown();
             currentLobby.Leave();
-
-            lobbyEvent = LobbyEvent.HOST_LEAVE;
-            OnLobbyEvent?.Invoke(currentLobby, lobbyEvent);
+            UIUpdate_OnCloseConnection?.Invoke(currentLobby);
         }
         #endregion
 

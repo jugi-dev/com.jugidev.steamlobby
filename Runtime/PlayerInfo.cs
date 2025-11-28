@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading.Tasks;
 using Steamworks;
 using Steamworks.Data;
@@ -8,16 +9,25 @@ namespace SteamLobby
 {
     public class PlayerInfo
     {
-        public Friend Friend;
-        public bool IsLobbyOwner;
+        private Friend m_friend;
+        private bool m_isLobbyOwner;
 
-        private ulong[] developerIds = new ulong[] { };
+        private ulong[] m_developerIds;
+
+        public PlayerInfo(Friend friend, bool isLobbyOwner, ulong[] developerIds = null)
+        {
+            m_friend = friend;
+            m_isLobbyOwner = isLobbyOwner;
+            m_developerIds = developerIds;
+        }
 
         public bool IsDeveloper()
         {
-            foreach (var id in developerIds)
+            if (m_developerIds == null || m_developerIds.Length <= 0) return false;
+
+            foreach (var id in m_developerIds)
             {
-                if (Friend.Id == id)
+                if (m_friend.Id == id)
                     return true;
             }
             return false;
@@ -25,24 +35,25 @@ namespace SteamLobby
 
         public string ConstructLobbyEntry()
         {
-            string entry = $"{Friend.Name} ";
-            if (IsLobbyOwner)
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.Append($"{m_friend.Name}");
+            if (m_isLobbyOwner)
             {
-                entry += "(Owner) ";
+                stringBuilder.Append("(Owner) ");
             }
             if (IsDeveloper())
             {
-                entry += "[Developer]";
+                stringBuilder.Append("[Developer]");
             }
 
-            return entry;
+            return stringBuilder.ToString();
         }
 
         public async Task<Texture2D> GetAvatar()
         {
             try
             {
-                Image? avatar = await Friend.GetMediumAvatarAsync();
+                Image? avatar = await m_friend.GetMediumAvatarAsync();
 
                 if (avatar.HasValue)
                 {
@@ -76,16 +87,16 @@ namespace SteamLobby
         )
         {
             Texture2D flipped = new Texture2D(original.width, original.height);
-            int xN = original.width;
-            int yN = original.height;
+            int width = original.width;
+            int height = original.height;
 
-            for (int i = 0; i < xN; i++)
+            for (int i = 0; i < width; i++)
             {
-                for (int j = 0; j < yN; j++)
+                for (int j = 0; j < height; j++)
                 {
                     flipped.SetPixel(
-                        flipHorizontally ? xN - i - 1 : i,
-                        flipVertically ? yN - j - 1 : j,
+                        flipHorizontally ? width - i - 1 : i,
+                        flipVertically ? height - j - 1 : j,
                         original.GetPixel(i, j)
                     );
                 }
