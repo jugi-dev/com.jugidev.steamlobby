@@ -1,6 +1,6 @@
 ## Steam Lobby template
 
-A simple Steam lobby template for Unity. Uses Netcode for GameObjects.
+A simple Steam lobby template for Unity. Uses Netcode for GameObjects and Facepunch Transport.
 ## Dependency installation (required)
 
 Package Manager -> Install package from git URL -> paste the link below
