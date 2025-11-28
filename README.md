@@ -21,7 +21,7 @@ Get the source from Releases, clone this repo or in Unity Package Manager -> Ins
 https://github.com/jugi-dev/com.jugidev.steamlobby.git
 ```
 ## Example
-A script for a simple UI. You should always call ```base.Start()``` first because this subscribes to the lobby's events. Same goes for OnDestroy().
+A script for a simple UI. You should always call ```base.Start()``` first because this subscribes to the lobby's events. Same goes for ```base.OnDestroy()```, it unsubscribes from the events.
 ```csharp
 using Steamworks;
 using Steamworks.Data;
